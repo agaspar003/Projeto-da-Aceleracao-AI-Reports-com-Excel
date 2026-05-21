@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stuttgart Porsche - Performance Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-principal: #0a0a0a;
+            --bg-card: #121212;
+            --border-color: #262626;
+            --text-primary: #ffffff;
+            --text-secondary: #8a8a8a;
+            --porsche-red: #d5001c;
+            --font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-principal);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header Estilo Porsche */
+        header {
+            background-color: #000000;
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        header span {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        /* Container Principal */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            flex: 1;
+        }
+
+        /* Barra Lateral de Filtros */
+        .sidebar-filters {
+            background-color: #000000;
+            border-right: 1px solid var(--border-color);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-filters h2 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+            border-left: 3px solid var(--porsche-red);
+            padding-left: 10px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+
+        .filter-group select, .filter-group input {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .filter-group select:focus, .filter-group input:focus {
+            border-color: var(--porsche-red);
+        }
+
+        .btn-filtrar {
+            background-color: var(--porsche-red);
+            color: white;
+            border: none;
+            padding: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-filtrar:hover {
+            background-color: #b00016;
+        }
+
+        /* Área de Conteúdo */
+        main {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            overflow-y: auto;
+        }
+
+        /* Linha de KPIs */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .kpi-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .kpi-card .title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+
+        .kpi-card .value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        /* Grid de Gráficos e Tabelas */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .chart-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            min-height: 340px;
+        }
+
+        .chart-card.full-width {
+            grid-column: span 2;
+        }
+
+        .chart-card h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .canvas-container {
+            position: relative;
+            height: 240px;
+            width: 100%;
+        }
+
+        /* Tabela customizada */
+        .table-container {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .table-container th, .table-container td {
+            text-align: left;
+            padding: 12px;
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table-container th {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Seção de Insights */
+        .insights-section {
+            background-color: #161616;
+            border: 1px solid var(--border-color);
+            padding: 30px;
+            border-left: 4px solid var(--porsche-red);
+        }
+
+        .insights-section h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+
+        .insights-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .insights-list li {
+            font-size: 0.9rem;
+            color: #d1d1d1;
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .insights-list li::before {
+            content: "▪";
+            color: var(--porsche-red);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Stuttgart Porsche</h1>
+        <span>BUSINESS INTELLIGENCE HUB</span>
+    </header>
+
+    <div class="dashboard-container">
+        <aside class="sidebar-filters">
+            <h2>Filtros Avançados</h2>
+            
+            <div class="filter-group">
+                <label for="modelo">Modelo</label>
+                <select id="modelo">
+                    <option value="todos">Todos os Modelos</option>
+                    <option value="911">Porsche 911</option>
+                    <option value="taycan">Porsche Taycan</option>
+                    <option value="cayenne">Porsche Cayenne</option>
+                    <option value="macan">Porsche Macan</option>
+                    <option value="panamera">Porsche Panamera</option>
+                    <option value="718">Porsche 718 Boxster/Cayman</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="data-venda">Período de Venda</label>
+                <input type="date" id="data-inicio" value="2026-01-01">
+                <input type="date" id="data-fim" value="2026-05-20">
+            </div>
+
+            <div class="filter-group">
+                <label for="ano-carro">Ano do Veículo</label>
+                <select id="ano-carro">
+                    <option value="todos">Todos os anos</option>
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="quilometragem">Quilometragem</label>
+                <select id="quilometragem">
+                    <option value="todos">Qualquer Km</option>
+                    <option value="zero">Zero Km</option>
+                    <option value="seminovo">Até 15.000 Km</option>
+                    <option value="usado">Acima de 15.000 Km</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="cidade">Cidade (Filial)</label>
+                <select id="cidade">
+                    <option value="todos">Todas as Cidades</option>
+                    <option value="sp">São Paulo</option>
+                    <option value="rj">Rio de Janeiro</option>
+                    <option value="ctba">Curitiba</option>
+                    <option value="poa">Porto Alegre</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="pagamento">Método de Pagamento</label>
+                <select id="pagamento">
+                    <option value="todos">Todos os métodos</option>
+                    <option value="vista">À Vista / Pix</option>
+                    <option value="financiamento">Financiamento Porsche Financial Services</option>
+                    <option value="carta">Carta de Crédito / Consórcio</option>
+                </select>
+            </div>
+
+            <button class="btn-filtrar">Atualizar Dashboard</button>
+        </aside>
+
+        <main>
+            <section class="kpi-row">
+                <div class="kpi-card">
+                    <span class="title">Valor Total de Vendas</span>
+                    <span class="value" style="color: #ffffff;">R$ 48.650.000</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="title">Unidades Vendidas</span>
+                    <span class="value">54</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="title">Ticket Médio Geral</span>
+                    <span class="value">R$ 900.925</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="title">Margem Média Batida</span>
+                    <span class="value" style="color: #00ff66;">14,2%</span>
+                </div>
+            </section>
+
+            <section class="charts-grid">
+                
+                <div class="chart-card">
+                    <h3>Modelos Mais Vendidos por Período (Volume)</h3>
+                    <div class="canvas-container">
+                        <canvas id="chartPeriodo"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>Modelos mais Vendidos por Cidade</h3>
+                    <div class="canvas-container">
+                        <canvas id="chartCidade"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card full-width">
+                    <h3>Matriz de Valor Médio por Modelo e Cidade (R$)</h3>
+                    <table class="table-container">
+                        <thead>
+                            <tr>
+                                <th>Modelo</th>
+                                <th>São Paulo</th>
+                                <th>Rio de Janeiro</th>
+                                <th>Curitiba</th>
+                                <th>Porto Alegre</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Porsche 911</strong></td>
+                                <td>R$ 1.250.000</td>
+                                <td>R$ 1.280.000</td>
+                                <td>R$ 1.240.000</td>
+                                <td>R$ 1.260.000</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Porsche Taycan</strong></td>
+                                <td>R$ 980.000</td>
+                                <td>R$ 995.000</td>
+                                <td>R$ 970.000</td>
+                                <td>R$ 965.000</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Porsche Cayenne</strong></td>
+                                <td>R$ 840.000</td>
+                                <td>R$ 860.000</td>
+                                <td>R$ 835.000</td>
+                                <td>R$ 850.000</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Porsche Macan</strong></td>
+                                <td>R$ 520.000</td>
+                                <td>R$ 535.000</td>
+                                <td>R$ 515.000</td>
+                                <td>R$ 525.000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="insights-section">
+                <h3>Executive Insights & Performance</h3>
+                <ul class="insights-list">
+                    <li><strong>Predomínio do Porsche 911:</strong> O icônico modelo 911 continua liderando a receita bruta da praça de São Paulo, concentrando mais de 35% do faturamento total da regional neste quadrimestre.</li>
+                    <li><strong>Aceleração da Linha E-Performance:</strong> O Taycan apresentou um crescimento de 18% em vendas na praça de Curitiba comparado ao período homólogo anterior, impulsionado pelo método de financiamento proprietário da marca.</li>
+                    <li><strong>Perfil de Pagamento Dinâmico:</strong> O Financiamento via <em>Porsche Financial Services</em> superou as transações à vista pela primeira vez no segmento de SUVs (Macan e Cayenne), representando 52% das vendas totais de seminovos.</li>
+                </ul>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Configurações Globais do Chart.js para manter o padrão elegante (Sóbrio)
+        Chart.defaults.color = '#8a8a8a';
+        Chart.defaults.font.family = "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
+
+        // 1. Gráfico de Linhas/Evolução: Modelos por Período
+        const ctxPeriodo = document.getElementById('chartPeriodo').getContext('2d');
+        new Chart(ctxPeriodo, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai'],
+                datasets: [
+                    {
+                        label: 'Porsche 911',
+                        data: [12, 19, 15, 25, 22],
+                        borderColor: '#ffffff',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.2
+                    },
+                    {
+                        label: 'Cayenne/Macan',
+                        data: [25, 22, 30, 28, 35],
+                        borderColor: '#d5001c', // Toque sutil de Porsche Red
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.2
+                    },
+                    {
+                        label: 'Taycan (E-Performance)',
+                        data: [8, 12, 14, 18, 16],
+                        borderColor: '#4a90e2',
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.5,
+                        borderDash: [5, 5],
+                        tension: 0.2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { boxWidth: 12, padding: 15 } }
+                },
+                scales: {
+                    x: { grid: { color: '#262626' } },
+                    y: { grid: { color: '#262626' } }
+                }
+            }
+        });
+
+        // 2. Gráfico de Barras: Modelos mais vendidos por Cidade
+        const ctxCidade = document.getElementById('chartCidade').getContext('2d');
+        new Chart(ctxCidade, {
+            type: 'bar',
+            data: {
+                labels: ['São Paulo', 'Rio de Janeiro', 'Curitiba', 'Porto Alegre'],
+                datasets: [
+                    {
+                        label: '911 Carrera',
+                        data: [18, 10, 7, 5],
+                        backgroundColor: '#ffffff'
+                    },
+                    {
+                        label: 'Macan',
+                        data: [22, 14, 12, 9],
+                        backgroundColor: '#404040'
+                    },
+                    {
+                        label: 'Cayenne',
+                        data: [15, 11, 9, 8],
+                        backgroundColor: '#d5001c'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { boxWidth: 12, padding: 15 } }
+                },
+                scales: {
+                    x: { stacked: true, grid: { display: false } },
+                    y: { stacked: true, grid: { color: '#262626' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
