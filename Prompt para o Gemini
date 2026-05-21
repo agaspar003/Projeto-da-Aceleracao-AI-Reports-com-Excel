@@ -1,0 +1,8 @@
+Utilizando o recurso Canvas sobre os dados da planilha anexa, renderize uma dashboard em html ao lado
+
+#Filtros - Modelo da Porsche, Data de venda, ano do carro, quilometragem, cidade e método de pagamento
+
+#Perguntas de negocio e kpis
+totalizadores dos valores de venda / quais os modelos mais vendidos por cidade, valor médio por modelo e cidade, quais modelos mais venderam por periodo, insights
+
+#Formato elegante e sobrio, use como base o site da Porsche no Brasil https://www.stuttgartporsche.com.br/
